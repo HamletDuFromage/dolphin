@@ -166,6 +166,20 @@ void SlippiPane::CreateLayout()
 
   jukebox_settings_layout->addLayout(sfx_music_slider_layout);
 
+  // Banlist Settings
+  auto* banlist_settings = new QGroupBox(tr("Banlist Settings (Custom)"));
+  auto* banlist_settings_layout = new QVBoxLayout();
+  banlist_settings->setLayout(banlist_settings_layout);
+  m_main_layout->addWidget(banlist_settings);
+
+  auto* character_banlist_layout = new QGridLayout;
+  auto* character_banlist_label = new QLabel(tr("Character Banlist:"));
+  m_character_banlist = new NonDefaultQPushButton(QStringLiteral("Configure"));
+  character_banlist_layout->addWidget(character_banlist_label, 0, 0);
+  character_banlist_layout->addWidget(m_character_banlist, 0, 1);
+
+  banlist_settings_layout->addLayout(character_banlist_layout);
+
 #else
   // Playback Settings
   auto* playback_settings = new QGroupBox(tr("Playback Settings"));
@@ -249,6 +263,11 @@ void SlippiPane::ConnectLayout()
   connect(m_enable_jukebox, &QCheckBox::toggled, this, &SlippiPane::ToggleJukebox);
   connect(m_music_volume_slider, qOverload<int>(&QSlider::valueChanged), this,
           &SlippiPane::OnMusicVolumeUpdate);
+
+  // Banlist Settings
+  connect(m_character_banlist, &QPushButton::clicked, this,
+          &SlippiPane::OnCharacterBanlistClick);
+
 #else
   // HOOKUP PLAYBACK STUFF
 #endif
@@ -311,6 +330,52 @@ void SlippiPane::OnMusicVolumeUpdate(int volume)
     if (slippi_exi != nullptr)
       slippi_exi->UpdateJukeboxDolphinMusicVolume(volume);
   }
+}
+
+void SlippiPane::CharacterClicked(QListWidgetItem *item)
+{
+  if (!item)
+    return;
+  u32 banlist = Config::Get(Config::SLIPPI_CHARACTER_BANLIST);
+  int character_id = m_character_checkboxes->row(item);
+  int state = (m_character_checkboxes->item(character_id)->checkState() == Qt::Checked) ? 1 : 0;
+  banlist &= ~(1 << character_id);
+  banlist |= (state << character_id);
+  Config::SetBase(Config::SLIPPI_CHARACTER_BANLIST, banlist);
+}
+
+void SlippiPane::OnCharacterBanlistClick()
+{
+  QStringList characters = {
+    QStringLiteral("Captain Falcon"), QStringLiteral("Donkey Kong"), QStringLiteral("Fox"),
+    QStringLiteral("Game & Watch"), QStringLiteral("Kirby"), QStringLiteral("Bowser"),
+    QStringLiteral("Link"), QStringLiteral("Luigi"), QStringLiteral("Mario"),
+    QStringLiteral("Marth"), QStringLiteral("Mewtwo"), QStringLiteral("Ness"),
+    QStringLiteral("Peach"), QStringLiteral("Pikachu"), QStringLiteral("Ice Climbers"),
+    QStringLiteral("Jigglypuff"), QStringLiteral("Samus"), QStringLiteral("Yoshi"),
+    QStringLiteral("Zelda"), QStringLiteral("Sheik"), QStringLiteral("Falco"),
+    QStringLiteral("Young Link"), QStringLiteral("Dr. Mario"), QStringLiteral("Roy"),
+    QStringLiteral("Pichu"), QStringLiteral("Ganondorf")
+  };
+
+  QDialog dialog(this);
+  QVBoxLayout *layout = new QVBoxLayout();
+
+  m_character_checkboxes = new QListWidget(&dialog);
+  m_character_checkboxes->setSelectionMode(QAbstractItemView::MultiSelection);
+
+  u32 banlist = Config::Get(Config::SLIPPI_CHARACTER_BANLIST);
+  for (u8 i = 0; i < characters.length(); i++)
+  {
+    QListWidgetItem *item = new QListWidgetItem(characters[i], m_character_checkboxes);
+    item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+    auto state = banlist & (1 << i) ? Qt::Checked : Qt::Unchecked;
+    item->setCheckState(state);
+  }
+  connect(m_character_checkboxes, &QListWidget::itemClicked, this, &SlippiPane::CharacterClicked);
+  layout->addWidget(m_character_checkboxes);
+  dialog.setLayout(layout);
+  dialog.exec();
 }
 
 void SlippiPane::OnSaveConfig()

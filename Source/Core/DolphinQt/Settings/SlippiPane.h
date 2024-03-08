@@ -7,6 +7,7 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListWidgetItem>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QVBoxLayout>
@@ -35,6 +36,8 @@ private:
   void LoadConfig();
   void ConnectLayout();
   void OnSaveConfig();
+  void OnCharacterBanlistClick();
+  void CharacterClicked(QListWidgetItem *item);
 
   QVBoxLayout* m_main_layout;
 
@@ -54,4 +57,9 @@ private:
   QCheckBox* m_enable_jukebox;
   QSlider* m_music_volume_slider;
   QLabel* m_music_volume_percent;
+
+  // Banlist Settings
+  QPushButton* m_character_banlist;
+  QListWidget* m_character_checkboxes;
+
 };

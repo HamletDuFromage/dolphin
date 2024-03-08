@@ -2194,11 +2194,16 @@ void CEXISlippi::prepareOnlineMatchState()
     // Check if someone is picking dumb characters in non-direct
     auto local_char_ok = lps.character_id < 26;
     auto remote_char_ok = true;
+    u32 banlist = Config::Get(Config::SLIPPI_CHARACTER_BANLIST);
+    u8 banned_character;
     INFO_LOG_FMT(SLIPPI_ONLINE, "remote_player_count: {}", remote_player_count);
     for (int i = 0; i < remote_player_count; i++)
     {
-      if (rps[i].character_id >= 26)
+      if (rps[i].character_id >= 26 || banlist & (1 << rps[i].character_id))
+      {
         remote_char_ok = false;
+        banned_character = rps[i].character_id;
+      }
     }
 
     // TODO: Ideally remote_player_selections would just include everyone including the local player
@@ -2251,6 +2256,8 @@ void CEXISlippi::prepareOnlineMatchState()
       if (!remote_char_ok)
       {
         handleConnectionCleanup();
+        forced_error = "Your opponent picked an invalid character or a character you've banned (Character ID: " +
+              std::to_string(banned_character) + ")";
         prepareOnlineMatchState();
         return;
       }

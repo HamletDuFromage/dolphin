@@ -2198,7 +2198,7 @@ void CEXISlippi::prepareOnlineMatchState()
     auto remote_player_ok = true;
     u32 banlist = Config::Get(Config::SLIPPI_CHARACTER_BANLIST);
     std::string player_block_list = Config::Get(Config::SLIPPI_PLAYER_BLOCKLIST);
-    u8 banned_character;
+    u8 banned_character = -1;
     std::string blocked_player;
     INFO_LOG_FMT(SLIPPI_ONLINE, "remote_player_count: {}", remote_player_count);
     for (int i = 0; i < remote_player_count; i++)

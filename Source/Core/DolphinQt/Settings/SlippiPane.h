@@ -10,6 +10,7 @@
 #include <QListWidgetItem>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QTableWidget>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -38,6 +39,10 @@ private:
   void OnSaveConfig();
   void OnCharacterBanlistClick();
   void CharacterClicked(QListWidgetItem *item);
+  void OnPlayerBlocklistClick();
+  void PlayerCodeAdded();
+  void PlayerCodeDeleted();
+  void SavePlayerBlockList();
 
   QVBoxLayout* m_main_layout;
 
@@ -61,5 +66,7 @@ private:
   // Banlist Settings
   QPushButton* m_character_banlist;
   QListWidget* m_character_checkboxes;
-
+  QPushButton* m_player_blocklist;
+  QTableWidget* m_player_block_table;
+  QLineEdit* m_player_code;
 };

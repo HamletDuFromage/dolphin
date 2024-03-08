@@ -71,6 +71,7 @@ extern const Info<bool> SLIPPI_BLOCKING_PIPES;
 extern const Info<bool> SLIPPI_ENABLE_JUKEBOX;
 extern const Info<int> SLIPPI_JUKEBOX_VOLUME;
 extern const Info<u32> SLIPPI_CHARACTER_BANLIST;
+extern const Info<std::string> SLIPPI_PLAYER_BLOCKLIST;
 
 // Playback Settings
 extern const Info<bool> SLIPPI_ENABLE_SEEK;

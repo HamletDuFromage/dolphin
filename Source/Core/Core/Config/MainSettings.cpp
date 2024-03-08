@@ -55,6 +55,7 @@ const Info<bool> SLIPPI_BLOCKING_PIPES{{System::Main, "Slippi", "BlockingPipes"}
 const Info<bool> SLIPPI_ENABLE_JUKEBOX{{System::Main, "Slippi", "EnableJukebox"}, true};
 const Info<int> SLIPPI_JUKEBOX_VOLUME{{System::Main, "Slippi", "JukeboxVolume"}, 100};
 const Info<u32> SLIPPI_CHARACTER_BANLIST{{System::Main, "Slippi", "CharacterBanlist"}, 0};
+const Info<std::string> SLIPPI_PLAYER_BLOCKLIST{{System::Main, "Slippi", "PlayerBanlist"}, ""};
 
 // Playback Settings
 const Info<bool> SLIPPI_ENABLE_SEEK{{System::Main, "Slippi", "EnableSeek"}, true};

@@ -4,7 +4,9 @@
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QGridLayout>
+#include <QRegularExpression>
 #include <QSizePolicy>
+#include <QTableWidget>
 
 #include "Core/Config/MainSettings.h"
 #include "Core/ConfigManager.h"
@@ -178,7 +180,14 @@ void SlippiPane::CreateLayout()
   character_banlist_layout->addWidget(character_banlist_label, 0, 0);
   character_banlist_layout->addWidget(m_character_banlist, 0, 1);
 
+  auto* player_blocklist_layout = new QGridLayout;
+  auto* player_blocklist_label = new QLabel(tr("Player Banlist:"));
+  m_player_blocklist = new NonDefaultQPushButton(QStringLiteral("Configure"));
+  player_blocklist_layout->addWidget(player_blocklist_label, 1, 0);
+  player_blocklist_layout->addWidget(m_player_blocklist, 1, 1);
+
   banlist_settings_layout->addLayout(character_banlist_layout);
+  banlist_settings_layout->addLayout(player_blocklist_layout);
 
 #else
   // Playback Settings
@@ -267,6 +276,8 @@ void SlippiPane::ConnectLayout()
   // Banlist Settings
   connect(m_character_banlist, &QPushButton::clicked, this,
           &SlippiPane::OnCharacterBanlistClick);
+  connect(m_player_blocklist, &QPushButton::clicked, this,
+          &SlippiPane::OnPlayerBlocklistClick);
 
 #else
   // HOOKUP PLAYBACK STUFF
@@ -374,6 +385,79 @@ void SlippiPane::OnCharacterBanlistClick()
   }
   connect(m_character_checkboxes, &QListWidget::itemClicked, this, &SlippiPane::CharacterClicked);
   layout->addWidget(m_character_checkboxes);
+  dialog.setLayout(layout);
+  dialog.exec();
+}
+
+void SlippiPane::PlayerCodeAdded()
+{
+  QString code = m_player_code->text();
+  QRegularExpression code_pattern(QStringLiteral("^[A-Za-z]+#[0-9]+"));
+  if (code_pattern.match(code).hasMatch()) {
+    int row_position = m_player_block_table->rowCount();
+    m_player_block_table->insertRow(row_position);
+    m_player_block_table->setItem(row_position, 0, new QTableWidgetItem(code.toUpper()));
+    m_player_code->clear();
+  }
+  SavePlayerBlockList();
+}
+
+void SlippiPane::PlayerCodeDeleted()
+{
+  int row = m_player_block_table->currentRow();
+  if (row >= 0) {
+    m_player_block_table->removeRow(row);
+  }
+  SavePlayerBlockList();
+}
+
+void SlippiPane::SavePlayerBlockList()
+{
+  QStringList blocklist;
+  for (int i = 0; i < m_player_block_table->rowCount(); i++)
+  {
+    blocklist.append(m_player_block_table->item(i, 0)->text());
+  }
+  Config::SetBase(Config::SLIPPI_PLAYER_BLOCKLIST, blocklist.join(QStringLiteral(";")).toStdString());
+}
+
+void SlippiPane::OnPlayerBlocklistClick()
+{
+  QDialog dialog(this);
+  QVBoxLayout *layout = new QVBoxLayout();
+
+  m_player_block_table = new QTableWidget();
+  m_player_block_table->setColumnCount(1);
+  m_player_block_table->setHorizontalHeaderLabels({tr("Player codes")});
+
+  QHBoxLayout *button_layout = new QHBoxLayout();
+  auto* add_button = new NonDefaultQPushButton(tr("Add"));
+  auto* delete_button = new NonDefaultQPushButton(tr("Delete"));
+
+  m_player_code = new QLineEdit();
+  m_player_code->setPlaceholderText(QStringLiteral("CODE#123"));
+
+  connect(add_button, &QPushButton::clicked, this, &SlippiPane::PlayerCodeAdded);
+  connect(delete_button, &QPushButton::clicked, this, &SlippiPane::PlayerCodeDeleted);
+
+  QString banlist_raw = QString::fromStdString(Config::Get(Config::SLIPPI_PLAYER_BLOCKLIST));
+  QStringList banlist = banlist_raw.split(QStringLiteral(";"));
+  for (int i = 0; i < banlist.size(); i++)
+  {
+    if (banlist[i].isEmpty()) continue;
+    auto row = m_player_block_table->rowCount();
+    m_player_block_table->insertRow(row);
+    auto* code_item = new QTableWidgetItem(banlist[i]);
+    code_item->setFlags(code_item->flags() & ~Qt::ItemIsEditable);
+    m_player_block_table->setItem(row, 0, code_item);
+  }
+
+  button_layout->addWidget(add_button);
+  button_layout->addWidget(delete_button);
+  layout->addWidget(m_player_block_table, 1);
+  layout->addWidget(m_player_code);
+  layout->addLayout(button_layout);
+
   dialog.setLayout(layout);
   dialog.exec();
 }

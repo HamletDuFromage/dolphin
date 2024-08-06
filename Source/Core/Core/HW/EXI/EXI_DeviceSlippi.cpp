@@ -52,7 +52,7 @@
 // #define CREATE_DIFF_FILES
 extern std::unique_ptr<SlippiPlaybackStatus> g_playback_status;
 extern std::unique_ptr<SlippiReplayComm> g_replay_comm;
-extern bool g_need_input_for_frame;
+bool g_need_input_for_frame;
 
 #ifdef LOCAL_TESTING
 bool is_local_connected = false;
@@ -116,7 +116,8 @@ std::string ConvertConnectCodeForGame(const std::string& input)
   signed char full_width_shift_jis_hashtag[] = {-127, -108, 0};  // 0x81, 0x94, 0x00
   std::string connect_code(input);
   // SLIPPITODO：Not the best use of ReplaceAll. potential bug if more than one '#' found.
-  connect_code = ReplaceAll(connect_code, "#", std::string(reinterpret_cast<const char*>(full_width_shift_jis_hashtag)));
+  connect_code = ReplaceAll(
+      connect_code, "#", std::string(reinterpret_cast<const char*>(full_width_shift_jis_hashtag)));
   // fixed length + full width (two byte) hashtag +1, null terminator +1
   connect_code.resize(CONNECT_CODE_LENGTH + 2);
   return connect_code;
@@ -923,7 +924,7 @@ void CEXISlippi::prepareCharacterFrameData(Slippi::FrameData* frame, u8 port, u8
   source = is_follower ? frame->followers : frame->players;
 
   // This must be updated if new data is added
-  int character_data_len = 50;
+  int character_data_len = 52;
 
   // Check if player exists
   if (!source.count(port))
@@ -958,6 +959,8 @@ void CEXISlippi::prepareCharacterFrameData(Slippi::FrameData* frame, u8 port, u8
   m_read_queue.push_back(data.joystickXRaw);
   m_read_queue.push_back(data.joystickYRaw);
   appendWordToBuffer(&m_read_queue, static_cast<u32>(data.percent));
+  m_read_queue.push_back(data.cstickXRaw);
+  m_read_queue.push_back(data.cstickYRaw);
   // NOTE TO DEV: If you add data here, make sure to increase the size above
 }
 
@@ -3134,6 +3137,7 @@ void CEXISlippi::DMAWrite(u32 _uAddr, u32 _uSize)
   {
     SlippiSpectateServer::getInstance().write(&mem_ptr[0], _uSize);
     g_need_input_for_frame = true;
+    return;
   }
 
   INFO_LOG_FMT(EXPANSIONINTERFACE,
@@ -3335,8 +3339,8 @@ void CEXISlippi::ConfigureJukebox()
   // Exclusive WASAPI will prevent Jukebox from running on the main device, relegating it to another
   // device at random, so we will simply prevent Jukebox from running if the user is using WASAPI on
   // the default device (assuming they don't select the default device directly).
-#ifdef _WIN32
   std::string backend = Config::Get(Config::MAIN_AUDIO_BACKEND);
+#ifdef _WIN32
   std::string audio_device = Config::Get(Config::MAIN_WASAPI_DEVICE);
   if (backend.find(BACKEND_WASAPI) != std::string::npos && audio_device == "default")
   {
@@ -3346,8 +3350,13 @@ void CEXISlippi::ConfigureJukebox()
   }
 #endif
 
-  int dolphin_system_volume =
-      Config::Get(Config::MAIN_AUDIO_MUTED) ? 0 : Config::Get(Config::MAIN_AUDIO_VOLUME);
+  if (backend.find(BACKEND_NULLSOUND) != std::string::npos) {
+    return;
+  }
+
+  int dolphin_system_volume = Config::Get(Config::MAIN_AUDIO_MUTED) ?
+                                  0 :
+                                  Config::Get(Config::MAIN_AUDIO_VOLUME);
 
   int dolphin_music_volume = Config::Get(Config::SLIPPI_JUKEBOX_VOLUME);
 

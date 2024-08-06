@@ -582,16 +582,6 @@ if(GETTEXT_MSGFMT_EXECUTABLE)
   endforeach()
 endif()
 
-# Link SlippiRustExtensions in.
-#
-# (This doesn't feel perfect here, but truth be told I can't think offhand of
-# a better location for it at the moment.)
-#set(RUST_FEATURES "")
-#if(DIS_PLAYBACK)
-#    set(RUST_FEATURES "playback")
-#endif()
-
-corrosion_import_crate(MANIFEST_PATH ${CMAKE_SOURCE_DIR}/Externals/SlippiRustExtensions/Cargo.toml ${RUST_FEATURES})
 target_link_libraries(dolphin-emu PUBLIC slippi-rust-extensions)
 
 if(APPLE)
@@ -684,7 +674,7 @@ if(APPLE)
     #   POST_BUILD COMMAND
     #   /usr/bin/codesign -f -s "${MACOS_CODE_SIGNING_IDENTITY}" --deep --options=runtime --entitlements "${CMAKE_SOURCE_DIR}/Source/Core/DolphinQt/DolphinEmu.entitlements" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}/${OUTPUT_NAME}.app" || true)
     add_custom_command(TARGET dolphin-emu POST_BUILD
-      COMMAND /usr/bin/codesign -f -s "${MACOS_CODE_SIGNING_IDENTITY}" --deep --options=runtime --entitlements "${CMAKE_SOURCE_DIR}/Source/Core/DolphinQt/DolphinEmu$<$<CONFIG:Debug>:Debug>.entitlements" "$<TARGET_BUNDLE_DIR:OUTPUT_NAME>")
+      COMMAND /usr/bin/codesign -f -s "${MACOS_CODE_SIGNING_IDENTITY}" --deep --options=runtime --entitlements "${CMAKE_SOURCE_DIR}/Source/Core/DolphinQt/DolphinEmu$<$<CONFIG:Debug>:Debug>.entitlements" "$<TARGET_BUNDLE_DIR:dolphin-emu>")
   endif()
 else()
   install(TARGETS dolphin-emu RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

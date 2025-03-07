@@ -290,7 +290,7 @@ jobs:
           echo "HOMEBREW_NO_AUTO_UPDATE=1" >> $GITHUB_ENV
           brew upgrade cmake
           brew install \
-          ffmpeg@2.8 \
+          ffmpeg \
           libpng \
           pkgconfig \
           libao \
@@ -351,6 +351,7 @@ jobs:
           /usr/bin/codesign -f -s "${{ secrets.APPLE_IDENTITY_HASH }}" --deep --options runtime ./artifact/${{ env.FILE_NAME }}.dmg
           chmod +x Tools/notarize_netplay.sh && ./Tools/notarize_netplay.sh ./artifact/${{ env.FILE_NAME }}.dmg
       - name: "Publish"
+        if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}

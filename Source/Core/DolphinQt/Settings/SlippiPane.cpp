@@ -186,8 +186,14 @@ void SlippiPane::CreateLayout()
   player_blocklist_layout->addWidget(player_blocklist_label, 1, 0);
   player_blocklist_layout->addWidget(m_player_blocklist, 1, 1);
 
+  // Whitelist mode checkbox (only for players)
+  m_player_whitelist_mode = new QCheckBox(tr("Player Whitelist Mode"));
+  m_player_whitelist_mode->setToolTip(tr("When enabled, only players in the banlist will be allowed. "
+                                        "When disabled, players in the banlist will be blocked."));
+
   banlist_settings_layout->addLayout(character_banlist_layout);
   banlist_settings_layout->addLayout(player_blocklist_layout);
+  banlist_settings_layout->addWidget(m_player_whitelist_mode);
 
 #else
   // Playback Settings
@@ -243,6 +249,9 @@ void SlippiPane::LoadConfig()
   m_music_volume_percent->setText(tr(" %1%").arg(jukebox_volume));
 
   m_music_volume_slider->setDisabled(!enable_jukebox);
+
+  // Banlist Settings
+  m_player_whitelist_mode->setChecked(Config::Get(Config::SLIPPI_PLAYER_WHITELIST_MODE));
 #else
   // HOOKUP PLAYBACK STUFF
 #endif
@@ -267,6 +276,10 @@ void SlippiPane::ConnectLayout()
   connect(m_force_netplay_port, &QCheckBox::toggled, this, &SlippiPane::SetForceNetplayPort);
   connect(m_netplay_port, qOverload<int>(&QSpinBox::valueChanged), this,
           [](int port) { Config::SetBase(Config::SLIPPI_NETPLAY_PORT, port); });
+
+  // Banlist Settings
+  connect(m_player_whitelist_mode, &QCheckBox::toggled, this,
+          [](bool checked) { Config::SetBase(Config::SLIPPI_PLAYER_WHITELIST_MODE, checked); });
 
   // Jukebox Settings
   connect(m_enable_jukebox, &QCheckBox::toggled, this, &SlippiPane::ToggleJukebox);

@@ -2224,12 +2224,14 @@ void CEXISlippi::prepareOnlineMatchState()
     auto remote_player_ok = true;
     u32 banlist = Config::Get(Config::SLIPPI_CHARACTER_BANLIST);
     std::string player_block_list = Config::Get(Config::SLIPPI_PLAYER_BLOCKLIST);
+    bool player_whitelist_mode = Config::Get(Config::SLIPPI_PLAYER_WHITELIST_MODE);
     u8 banned_character = -1;
     std::string blocked_player;
     INFO_LOG_FMT(SLIPPI_ONLINE, "remote_player_count: {}", remote_player_count);
     for (int i = 0; i < remote_player_count; i++)
     {
-      if (player_block_list.find(codes[i].connect_code) != std::string::npos)
+      bool player_in_list = player_block_list.find(codes[i].connect_code) != std::string::npos;
+      if (player_whitelist_mode ? !player_in_list : player_in_list)
       {
         remote_player_ok = false;
         blocked_player = codes[i].connect_code;
@@ -2291,8 +2293,8 @@ void CEXISlippi::prepareOnlineMatchState()
       if (!remote_player_ok)
       {
         handleConnectionCleanup();
-        forced_error = "You matched against a player you've blocked (" +
-                      blocked_player + ")";
+        std::string mode_text = player_whitelist_mode ? "not in your whitelist" : "in your blocklist";
+        forced_error = "You matched against a player " + mode_text + " (" + blocked_player + ")";
         prepareOnlineMatchState();
         return;
       }

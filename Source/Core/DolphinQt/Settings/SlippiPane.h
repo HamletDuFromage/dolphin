@@ -69,4 +69,5 @@ private:
   QPushButton* m_player_blocklist;
   QTableWidget* m_player_block_table;
   QLineEdit* m_player_code;
+  QCheckBox* m_player_whitelist_mode;
 };
